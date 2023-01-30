@@ -1,1 +1,0 @@
-typeSearchIndex = [{"p":"es.uma.ada","l":"Algorithm"},{"l":"All Classes","url":"allclasses-index.html"},{"p":"es.uma.ada.problem.algebra.diophantine.factorization","l":"BruteForceFactorization"},{"p":"es.uma.ada.problem.algebra.diophantine.factorization","l":"IntegerFactorization"},{"p":"es.uma.ada.problem.algebra.diophantine.factorization","l":"TestBruteForceFactorization"}]
