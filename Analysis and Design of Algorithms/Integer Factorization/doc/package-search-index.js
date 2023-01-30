@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"es.uma.ada"},{"l":"es.uma.ada.problem.algebra.diophantine.factorization"}]
