@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{amsthm}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{eurosym}
+
+
+% Margins
+\usepackage[top=2.5cm, left=3cm, right=3cm, bottom=4.0cm]{geometry}
+% Colour table cells
+\usepackage[table]{xcolor}
+
+% Get larger line spacing in table
+\newcommand{\tablespace}{\\[1.25mm]}
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\tstrut{\rule{0pt}{2.0ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+\theoremstyle{remark}
+\newtheorem*{lemma}{Lema}
+
+
+%%%%%%%%%%%%%%%%%
+%     Title     %
+%%%%%%%%%%%%%%%%%
+\title{Theory of Automata and Formal languages}
+\author{Fernando Javier López Cerezo \\ Taller 2}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{lemma}
+El lenguaje $L=\{yy^R : y \in \{0,1\}^* \}$ no es regular.
+\end{lemma}
+
+\begin{proof}[Demostración]
+
+Usemos el lema del bombeo regular. Debemos demostrar que $\forall n \in \mathbb{N}$ $ \exists x \in L  \text{ con } |x| \geq n \text{ tal que }  \forall u,v,w \in \Sigma^*$ no se cumple la condición del bombeo regular. \\\\ Se pues $n \in \mathbb{N}$ consideremos $x=0^n110^n 	\in L$. Como se debe cumplir que $|uv| \leq n$ la cadena $|uv|$ estará formada exclusivamente por el símbolo $0$ y como mucho serán $n$. Luego si $|uv| = n_0 \leq n$ y  $|v| = j > 0$ entonces $v = 0^{j}$ , $u = 0^{n_0-j}$ y $w=0^{n-n_0}110^n$. Para que se cumpla la condición del bombeo regular se debe cumplir que $\forall m \geq 0$  $uv^mw \in L$. Sin embargo si consideramos $m=0$ obtenemos la cadena $uw=0^{n_0-j}0^{n-n_0}110^n = 0^{n-j}110^n$ que claramente no pertenece a L. \\\\ En conclusión, al no cumplir la condición del bombeo regular, L no es un lenguaje regular. 
+
+\end{proof}
+
+\end{document}
