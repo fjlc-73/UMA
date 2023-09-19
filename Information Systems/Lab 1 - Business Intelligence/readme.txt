@@ -1,0 +1,1 @@
+In this Lab we had to analyse the Sales data of a given business using Tableau Desktop.

@@ -1,0 +1,1 @@
+In this Lab we had to review various commercial management applications such as Visionwin, QuickBooks, Invoice2go, Odoo and many others. 

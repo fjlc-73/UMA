@@ -1,0 +1,1 @@
+In this Lab we had to review the software PrestaShop, its functionalities and its use for E-Commerce. 
