@@ -1,0 +1,22 @@
+import java_cup.runtime.*;
+
+action code {: boolean fibo = true; int x = 0;:};
+
+/* Terminals (tokens returned by the scanner). */
+terminal Integer NUMERO;
+
+
+/* Non terminals */
+non terminal Integer var;
+non terminal axioma;
+
+/* Precedences */
+precedence nonassoc NUMERO;
+
+/* The grammar */
+
+axioma ::= var {:if(fibo){Test.out.print("SI");} else {Test.out.print("NO");}:};
+
+var ::= NUMERO:n1 NUMERO:n2 {:RESULT=n1+n2; x=n2;:}
+	| var:v NUMERO:n {:RESULT=n+x; if(!n.equals(v)){fibo=false;} x=n;:}
+	;

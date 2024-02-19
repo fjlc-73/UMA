@@ -1,0 +1,94 @@
+import java_cup.runtime.*;
+import java.util.ArrayList;
+
+action code {:TablaSimbolos tb = new TablaSimbolos();:}
+
+/* Terminals (tokens returned by the scanner). */
+terminal ALL, CLL, AP, CP, AC, CC, COMA, PYC, ASIG, MAS, MENOS, POR, DIV, INVERSA, TRANSPUESTA, ADJUNTA, PRINT;
+terminal String IDENT;
+terminal Double NUMERO;
+
+/* Non terminals */
+non terminal linea, axioma;
+non terminal double [][] expr, mat;
+non terminal ArrayList<ArrayList<Double>> arr, arr2;
+non terminal ArrayList<Double> fila;
+
+
+/* Precedences */
+precedence left COMA;
+precedence nonassoc NUMERO;
+precedence left MAS;
+precedence left POR;
+precedence left AP, CP;
+precedence left ALL, CLL;
+
+/* The grammar */
+linea ::= linea axioma PYC
+		| axioma PYC
+		;
+		
+axioma ::= PRINT AP expr:e CP {:Matrices.print(e);:}
+	|IDENT:i ASIG expr:e {:tb.insertar(i,e);:}
+	;
+
+expr ::= mat:m {:RESULT=m;:}
+	|TRANSPUESTA AP expr:e CP {:RESULT=Matrices.transpuesta(e);:}
+	|ADJUNTA AP expr:e CP {:
+		if(Matrices.columnas(e)==Matrices.filas(e))
+			{RESULT=Matrices.adjunta(e);}
+		else {System.out.print(Matrices.ERROR_ADJUNTA); System.exit(0);}
+		:}
+	|INVERSA AP expr:e CP {:
+		if(Matrices.columnas(e)==Matrices.filas(e))
+			{RESULT=Matrices.inversa(e);}
+		else {System.out.print(Matrices.ERROR_INVERSA); System.exit(0);}
+		:}
+	| expr:e1 POR expr:e2 {:
+		if(Matrices.columnas(e1)==Matrices.filas(e2))
+			{RESULT=Matrices.producto(e1, e2);}
+		else {System.out.print(Matrices.ERROR_PROD); System.exit(0);}
+		:}
+	| expr:e1 MAS expr:e2 {:
+		if(Matrices.filas(e1)==Matrices.filas(e2) && Matrices.columnas(e1)==Matrices.columnas(e2))
+			{RESULT=Matrices.suma(e1, e2);}
+		else {System.out.print(Matrices.ERROR_SUMA); System.exit(0);}
+		:}
+	|IDENT:i {:RESULT=tb.buscar(i);:}
+	| AP expr:e CP {:RESULT=e;:}
+	;
+
+mat ::= AC arr:a CC {:
+		boolean error = false;
+		int l = a.get(0).size(); 
+		for(int i=1; i < a.size(); i++){
+			if(a.get(i).size()!=l) {error = true;}
+		}
+		if(error) {System.out.print(Matrices.ERROR_FILAS); System.exit(0);} else {RESULT = Matrices.toArray(a);}
+	:}
+	| ALL arr2:a CLL {:
+		boolean error = false;
+		int l = a.get(0).size(); 
+		for(int i=1; i < a.size(); i++){
+			if(a.get(i).size()!=l) {error = true;}
+		}
+		if(error) {System.out.print(Matrices.ERROR_FILAS); System.exit(0);} else {RESULT = Matrices.toArray(a);}
+	:}
+	;
+
+arr ::= fila:f {:RESULT=new ArrayList<ArrayList<Double>>(); RESULT.add(f);:}
+	| arr:a1 arr:a2 {:RESULT=new ArrayList<ArrayList<Double>>(); RESULT.addAll(a1); RESULT.addAll(a2);:}
+	;
+	
+fila ::=  NUMERO:n {:RESULT=new ArrayList<Double>(); RESULT.add(n);:}
+	| fila:f1 COMA fila:f2 {:RESULT=new ArrayList<Double>(); RESULT.addAll(f1); RESULT.addAll(f2);:}
+	| NUMERO:n PYC {:RESULT=new ArrayList<Double>(); RESULT.add(n);:}
+	;
+
+arr2 ::= ALL fila:f CLL {:RESULT=new ArrayList<ArrayList<Double>>(); RESULT.add(f);:}
+	| arr2:a1 COMA arr2:a2 {:RESULT=new ArrayList<ArrayList<Double>>(); RESULT.addAll(a1); RESULT.addAll(a2);:}
+	;
+		
+
+
+

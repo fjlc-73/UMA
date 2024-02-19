@@ -1,0 +1,26 @@
+import java_cup.runtime.*;
+
+/* Terminals (tokens returned by the scanner). */
+terminal String IDENT, NUMERO;
+
+/* Non terminals */
+non terminal linea, axioma, valor;
+
+
+/* Precedences */
+precedence nonassoc IDENT, NUMERO;
+
+/* The grammar */
+linea ::= linea axioma
+		| axioma
+		;
+		
+axioma ::= valor:v axioma {:Test.out.print(v + " ");:}
+		| valor:v {:Test.out.print(v);:}
+		;
+		
+valor ::= IDENT:i {:RESULT=i.toString();:}
+	| NUMERO:n {:RESULT=n.toString();:}
+	;
+
+

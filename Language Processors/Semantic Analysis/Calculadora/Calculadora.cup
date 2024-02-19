@@ -1,0 +1,33 @@
+import java_cup.runtime.*;
+
+/* Terminals (tokens returned by the scanner). */
+terminal PLUS, MINUS, TIMES, DIVIDE;
+terminal UMINUS, LPAREN, RPAREN;
+terminal Integer NUMBER;
+terminal EOLN;
+
+/* Non terminals */
+non terminal expr_list, linea;
+non terminal Integer expr;
+
+/* Precedences */
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence left UMINUS;
+
+/* The grammar */
+linea ::= linea expr_list
+		| expr_list
+		;
+
+expr_list ::= expr:e EOLN {:Calculadora.out.println(e);:}
+		| EOLN {:Calculadora.out.println();:}
+		;
+expr ::= expr:e1 PLUS expr:e2 {:RESULT=e1+e2;:}
+	| expr:e1 MINUS expr:e2 {:RESULT=e1-e2;:}
+	| expr:e1 TIMES expr:e2 {:RESULT=e1*e2;:}
+	| expr:e1 DIVIDE expr:e2 {:RESULT=e1/e2;:}
+	| MINUS expr:e {:RESULT=-e;:} %prec UMINUS
+	| LPAREN expr:e RPAREN {:RESULT=e;:}
+	| NUMBER:n {:RESULT=n;:}
+	;

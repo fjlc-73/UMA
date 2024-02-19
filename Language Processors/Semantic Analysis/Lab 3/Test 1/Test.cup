@@ -1,0 +1,24 @@
+import java_cup.runtime.*;
+
+/* Terminals (tokens returned by the scanner). */
+terminal MAS, MENOS, POR, DIV;
+terminal Integer NUMERO;
+
+/* Non terminals */
+non terminal axioma;
+non terminal Integer expr;
+
+/* Precedences */
+precedence left MAS, MENOS;
+precedence left POR, DIV;
+
+
+/* The grammar */
+
+axioma ::= expr:e {:Test.out.println(e);:};
+expr ::= MAS expr:e1 expr:e2 {:RESULT=e1+e2;:}
+	|MENOS expr:e1 expr:e2 {:RESULT=e1-e2;:}
+	|POR expr:e1  expr:e2 {:RESULT=e1*e2;:}
+	|DIV expr:e1  expr:e2 {:RESULT=e1/e2;:}
+	| NUMERO:n {:RESULT=n;:}
+	;

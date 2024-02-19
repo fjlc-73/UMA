@@ -1,0 +1,32 @@
+import java_cup.runtime.*;
+
+/* Terminals (tokens returned by the scanner). */
+terminal MAS, MENOS, POR, DIV;
+terminal AP, CP;
+terminal String NUMERO, IDENT;
+
+
+/* Non terminals */
+non terminal expr_list, linea;
+non terminal String expr;
+
+/* Precedences */
+precedence left MAS, MENOS;
+precedence left POR, DIV;
+precedence left AP, CP;
+
+/* The grammar */
+linea ::= linea expr_list
+		| expr_list
+		;
+
+expr_list ::= expr:e {:Test.out.print(e);:};
+
+expr ::= expr:e1 MAS expr:e2 {:RESULT="+ " + e1 + " " +e2 ;:}
+	| expr:e1 MENOS expr:e2 {:RESULT="- " + e1 + " " +e2;:}
+	| expr:e1 POR expr:e2 {:RESULT="* " + e1 + " " +e2;:}
+	| expr:e1 DIV expr:e2 {:RESULT="/ " + e1 + " " +e2;:}
+	| AP expr:e CP {:RESULT=e;:}
+	| NUMERO:n {:RESULT=n;:}
+	| IDENT:i {:RESULT=i;:}
+	;

@@ -1,0 +1,70 @@
+import java_cup.runtime.*;
+import java.util.ArrayList;
+
+action code {:TablaSimbolos tb = new TablaSimbolos();:}
+
+/* Terminals (tokens returned by the scanner). */
+terminal ALL, CLL, AP, CP, AC, CC, COMA, PYC, ASIG, MAS, MENOS, POR, DIV, CONCATENA, INVERSA, TRANSPUESTA, ADJUNTA, PRINT;
+terminal String IDENT;
+terminal double[][] MATRIZ;
+terminal double[] VECTOR;
+terminal Double NUMERO;
+
+/* Non terminals */
+non terminal linea, axioma;
+non terminal double[][] exprmat;
+non terminal double[] exprvec;
+non terminal ArrayList<Double> vector;
+non terminal ArrayList<ArrayList<Double>> matriz;
+non terminal Double numero;
+
+
+/* Precedences */
+precedence left MAS;
+precedence left POR;
+precedence left CONCATENA;
+
+
+/* The grammar */
+linea ::= linea axioma PYC
+		| axioma PYC
+		;
+		
+axioma ::= IDENT:i ASIG exprvec:e {:tb.insertarVector(i,e);:}
+	| IDENT:i ASIG exprmat:e {:tb.insertar(i,e);:}
+	| PRINT AP exprvec:e CP {:Matrices.print(e);:}
+	| PRINT AP exprmat:e CP {:Matrices.print(e);:}
+	| IDENT:i AP NUMERO:f COMA NUMERO:c CP ASIG exprmat:e {:tb.insertar(i, Matrices.completar(e, f.intValue(), c.intValue()));:}
+	;
+
+exprmat ::= MATRIZ:m {:RESULT=m;:}
+	| MATRIZ:m AP NUMERO:f COMA NUMERO:c CP {:if(Matrices.filas(m)<f) {System.out.print(Matrices.ERROR_FILAS_INSUF); System.exit(0);} else if(Matrices.columnas(m)<c) {System.out.print(Matrices.ERROR_COLUM_INSUF); System.exit(0);} else {RESULT=Matrices.subMatriz(m,f.intValue(),c.intValue());}:}
+	| matriz:m CLL {:RESULT=Matrices.toArray(m);:}
+	| exprmat:e1 CONCATENA exprvec:e2 {:RESULT=Matrices.concatena(e1,e2);:}
+	| exprmat:e1 POR exprvec:e2 {:RESULT=Matrices.producto(e1,e2);:}
+	| exprvec:e1 POR exprmat:e2 {:RESULT=Matrices.producto(e1,e2);:}
+	| exprvec:e1 POR exprvec:e2 {:RESULT=Matrices.producto(e1,e2);:}
+	| exprmat:e1 POR exprmat:e2 {:RESULT=Matrices.producto(e1,e2);:}
+	;
+
+exprvec ::= VECTOR:v {:RESULT=v;:}
+	| vector:v CLL {:RESULT=Matrices.toVector(v);:}
+	| exprvec:e1 CONCATENA exprvec:e2 {:RESULT=Matrices.concatena(e1,e2);:}
+	| exprvec:e1 CONCATENA numero:n {:RESULT=Matrices.concatena(e1,n);:}
+	| numero:n CONCATENA exprvec:e {:RESULT=Matrices.concatena(n,e);:}
+	| exprvec:e1 MAS exprvec:e2 {:RESULT=Matrices.suma(e1,e2);:}
+	;
+	
+vector ::= ALL numero:n {:RESULT = new ArrayList<Double>(); RESULT.add(n);:}
+	| vector:v COMA numero:n {:RESULT = new ArrayList<Double>(); RESULT.addAll(v); RESULT.add(n);:}
+	;
+	
+matriz ::= ALL exprvec:e {:RESULT = new ArrayList<ArrayList<Double>>(); RESULT.add(Matrices.toArrayList(e));:}
+	| matriz:m COMA exprvec:e {:RESULT = new ArrayList<ArrayList<Double>>(); RESULT.addAll(m); RESULT.add(Matrices.toArrayList(e));:}
+	;
+	
+numero ::= NUMERO:n {:RESULT=n;:}
+	| MENOS NUMERO:n {:RESULT=-n;:}
+	;
+
+

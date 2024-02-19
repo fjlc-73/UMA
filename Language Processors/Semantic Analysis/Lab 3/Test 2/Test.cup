@@ -1,0 +1,29 @@
+import java_cup.runtime.*;
+
+action code{:int prof = 0;:}
+
+/* Terminals (tokens returned by the scanner). */
+terminal AC, CC, COMA;
+terminal Integer NUMERO;
+
+
+/* Non terminals */
+non terminal axioma;
+non terminal Integer expr, esperacc;
+
+/* Precedences */
+
+
+/* The grammar */
+
+axioma ::= expr:e {:if(prof==0) {Test.out.print(e);} else {Test.out.print("Syntax error");}:};
+
+expr ::= esperacc:e CC {:RESULT=e; if(prof==1) {prof=0;} else {prof=prof/2;}:}
+	;
+	
+esperacc ::= esperacc NUMERO:n {:RESULT=n*prof;:}
+	| AC {:if(prof==0){prof=1;} else {prof=prof*2;} RESULT=0;:}
+	| esperacc:e COMA NUMERO:n {:RESULT=e+(n*prof);:}
+	| esperacc:e1 COMA expr:e2 {:RESULT = e1+e2;:}
+	| esperacc:e1 expr:e2 {:RESULT = e1+e2;:}
+	;

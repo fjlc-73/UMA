@@ -1,0 +1,30 @@
+import java_cup.runtime.*;
+
+action code {: private String typnum = ""; :};
+
+/* Terminals (tokens returned by the scanner). */
+terminal PYC, INT, DOUBLE, COMA, DP;
+terminal String IDENT;
+
+/* Non terminals */
+non terminal axioma, tipo, var;
+
+
+/* Precedences */
+precedence left COMA;
+precedence nonassoc IDENT;
+
+/* The grammar */
+
+axioma ::= var:v DP tipo PYC {:Test.out.print(typnum + " " + v + ";");:};
+
+tipo ::= INT {:typnum="int";:}
+	| DOUBLE {:typnum="double";:}
+	;
+
+var ::= var:v1 COMA var:v2 {:RESULT=v1+ ", " + v2;:}
+	| IDENT:i {:RESULT=i;:}
+	;
+		
+		
+

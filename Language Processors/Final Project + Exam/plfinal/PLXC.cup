@@ -1,0 +1,123 @@
+import java_cup.runtime.*;
+import java.util.HashMap;
+import java.util.ArrayList;
+
+terminal PYC, AP, CP, ALL, CLL, MAS, MENOS, POR, DIV, IGUALDAD, NOIGUAL, MENOR, MENORIGUAL, MAYOR, MAYORIGUAL, BOOLEAN;
+terminal NOT, AND, OR, IF, ELSE, WHILE, DO, FOR, PRINT, IGUAL, MENOSUNARIO, INT, COMA, FLOAT, CHAR, AC, CC, LEN, STRING;
+terminal TRUE, FALSE, IMPLICA, FORALL;
+terminal String ENTERO, IDENT, REAL, CARACTER, STR, IDENTBOOL;
+
+non terminal axioma; 
+non terminal AST listaSent, sent, expr, cond, decl;
+non terminal TIPO tipo;
+non terminal ArrayList<AST> arr, arr2;
+
+precedence right IGUAL;
+precedence right IMPLICA;
+precedence left OR;
+precedence left AND;
+precedence left IGUALDAD, NOIGUAL, MENOR, MENORIGUAL, MAYOR, MAYORIGUAL;
+precedence left MAS, MENOS;
+precedence left POR, DIV;
+precedence right NOT;
+precedence left MENOSUNARIO;
+precedence left CP;
+precedence nonassoc IF;
+precedence nonassoc ELSE;
+
+axioma ::= listaSent:ls {:ls.ctd();:};
+
+listaSent ::= sent:s {:RESULT=new AST(null,s);:}
+	   | listaSent:ls sent:s {:RESULT=new AST(ls,s);:}
+	   ;
+	  
+sent ::= expr:e PYC {:RESULT=e;:}
+	| IF AP cond:c CP sent:s {:IF aux = new IF(c,s); RESULT=new IFELSE(aux,null);:}
+	| IF AP cond:c CP sent:s1 ELSE sent:s2 {:IF aux = new IF(c,s1); RESULT= new IFELSE(aux,s2);:}
+	| WHILE AP cond:c CP sent:s {:RESULT=new WHILE(c,s);:}
+	| DO sent:s WHILE AP cond:c CP PYC {:RESULT=new DOWHILE(s,c);:}
+	| FOR AP expr:e1 PYC cond:c PYC expr:e2 CP sent:s {:AST finW = new AST(s,e2); AST wh=new WHILE(c,finW); RESULT=new AST(e1,wh);:}
+	| FOR AP PYC cond:c PYC expr:e2 CP sent:s {:AST finW = new AST(s,e2); AST wh=new WHILE(c,finW); RESULT=new AST(null,wh);:}
+	| FOR AP expr:e1 PYC cond:c PYC CP sent:s {:AST finW = new AST(s,null); AST wh=new WHILE(c,finW); RESULT=new AST(e1,wh);:}
+	| FOR AP PYC cond:c PYC CP sent:s {:AST finW = new AST(s,null); AST wh=new WHILE(c,finW); RESULT=new AST(null,wh);:}
+	| IF AP FORALL IDENTBOOL:i COMA cond:c CP sent:s {:RESULT=new FORALL(i,c,s);:}
+	| IF AP FORALL IDENTBOOL:i1 COMA FORALL IDENTBOOL:i2 COMA cond:c CP sent:s {:RESULT=new FORALL(i1,i2,c,s);:}
+	| PRINT AP expr:e CP PYC {:RESULT=new PRINT(e,null);:}
+	| PRINT AP arr2:a CP PYC {:RESULT=new PRINT(null,null,a);:}
+	| PRINT AP cond:c CP PYC {:RESULT= new PRINTBOOL(null,c);:}
+	| ALL listaSent:ls CLL {:RESULT=ls;:}
+	| decl:d PYC {:RESULT=d;:}
+	;
+	
+decl ::= tipo:t IDENT:i {:if(TablaSimbolos.buscar(i)!=null){Generador.error();} TablaSimbolos.insertar(i,t); 
+			RESULT=new DECL(null,null,t);:}
+	|tipo:t IDENT:i AC ENTERO:e CC {:if(TablaSimbolos.buscar(i)!=null){Generador.error();} 
+					TablaSimbolos.insertar(i,new TIPO(TIPO.ARRAY, t, Integer.parseInt(e)));
+					RESULT=new DECL(null,null,t); Generador.asignacion("$"+i+"_length", e);:}
+	
+	|tipo:t IDENT:i IGUAL expr:e {:if(TablaSimbolos.buscar(i)!=null){Generador.error();} TablaSimbolos.insertar(i,t);
+					 RESULT=new DECL(null,new ASIG(i,e),t);:}
+	|tipo:t IDENT:i AC ENTERO:e CC IGUAL arr2:a {:if(TablaSimbolos.buscar(i)!=null){Generador.error();} 
+						   TablaSimbolos.insertar(i,new TIPO(TIPO.ARRAY, t, Integer.parseInt(e)));
+						   RESULT=new DECL(null, new ARRAY(a,i), t); Generador.asignacion("$"+i+"_length", e);:}
+	|decl:d COMA IDENT:i {:if(TablaSimbolos.buscar(i)!=null){Generador.error();} 
+				TablaSimbolos.insertar(i,((EXP)d).getTipo()); RESULT=new DECL(d,null,((EXP)d).getTipo());:}
+	|decl:d COMA IDENT:i IGUAL expr:e {:if(TablaSimbolos.buscar(i)!=null){Generador.error();} 
+						TablaSimbolos.insertar(i,((EXP)d).getTipo());
+						RESULT=new DECL(d,new ASIG(i,e),((EXP)d).getTipo());:}
+	;
+
+tipo ::= INT {:RESULT=new TIPO(TIPO.INT);:}
+	| FLOAT {:RESULT= new TIPO(TIPO.FLOAT);:}
+	| CHAR {:RESULT= new TIPO(TIPO.CHAR);:}
+	| STRING {:RESULT= new TIPO(TIPO.STRING);:}
+	| BOOLEAN {:RESULT=new TIPO(TIPO.BOOL);:}
+	;
+	
+expr ::= expr:e1 MAS expr:e2 {:RESULT=new SUMA(e1,e2);:}
+	| expr:e1 MENOS expr:e2 {:RESULT=new RESTA(e1,e2);:}
+	| expr:e1 POR expr:e2 {:RESULT=new MULT(e1,e2);:}
+	| expr:e1 DIV expr:e2 {:RESULT=new DIV(e1,e2);:}
+	| MENOS expr:e {:RESULT=new RESTA(e,null);:} %prec MENOSUNARIO
+	| AP expr:e CP {:RESULT=e;:}
+	| AP tipo:t CP expr:e {:RESULT = new CAST(e,t);:} 
+	| IDENT:i IGUAL expr:e {:if(TablaSimbolos.buscar(i)==null) {Generador.error();} RESULT=new ASIG(i,e);:}
+	| IDENT:i IGUAL arr2:a {:if(TablaSimbolos.buscar(i)==null) {Generador.error();} RESULT=new ARRAY(a, i);:}
+	| IDENT:i AC expr:e1 CC IGUAL expr:e2 {:if(TablaSimbolos.buscar(i)==null) {Generador.error();} RESULT=new ASIG(i,e1,e2);:}
+	| IDENT:i {:if(TablaSimbolos.buscar(i)==null) {Generador.error();} RESULT=new CONST(i,TablaSimbolos.buscar(i));:}
+	| IDENT:i AC expr:e CC {:if(TablaSimbolos.buscar(i)==null) {Generador.error();} 
+				RESULT=new CONST(i,TablaSimbolos.buscar(i).getSubtipo(),e);:}
+	| ENTERO:n {:RESULT=new CONST(n,new TIPO(TIPO.INT));:}
+	| REAL:r {:RESULT=new CONST(r,new TIPO(TIPO.FLOAT));:}
+	| CARACTER:c {:RESULT= new CONST(c,new TIPO(TIPO.CHAR));:}
+	| STR:s {:RESULT= new STRING(s);:}
+	| IDENT:i LEN {:RESULT= new CONST("$"+i+"_length", new TIPO(TIPO.INT));:}
+	| IDENTBOOL:i IGUAL TRUE {:RESULT = new ASIG(i,new CONST("1",new TIPO(TIPO.BOOL)));:}
+	| IDENTBOOL:i IGUAL FALSE {:RESULT = new ASIG(i,new CONST("0",new TIPO(TIPO.BOOL)));:}
+	| IDENTBOOL:i IGUAL cond:c {:RESULT=new ASIGBOOL(i,c);:}
+	| IDENTBOOL:i IGUAL expr:e {:if(TablaSimbolos.buscar(i)==null) {Generador.error();} RESULT=new ASIG(i,e);:}
+	;
+	
+cond ::= expr:e1 IGUALDAD expr:e2 {:RESULT= new COND(5,e1,e2);:}
+	| expr:e1 NOIGUAL expr:e2 {:RESULT= new COND(6,e1,e2);:}
+	| expr:e1 MENOR expr:e2 {:RESULT= new COND(1,e1,e2);:}
+	| expr:e1 MENORIGUAL expr:e2 {:RESULT= new COND(2,e1,e2);:}
+	| expr:e1 MAYOR expr:e2 {:RESULT= new COND(3,e1,e2);:}
+	| expr:e1 MAYORIGUAL expr:e2 {:RESULT= new COND(4,e1,e2);:}
+	| NOT cond:c {:RESULT=new NOT(9,c);:}
+	| cond:c1 AND cond:c2 {:RESULT=new AND(7,c1,c2);:}
+	| cond:c1 OR cond:c2 {:RESULT=new OR(8,c1,c2);:}
+	| AP cond:c CP {:RESULT=c;:}
+	| IDENTBOOL:i {:RESULT = new COND(5,new CONST("1",new TIPO(TIPO.INT)),new CONST(i,new TIPO(TIPO.INT)));:}
+	| cond:c1 IMPLICA cond:c2 {:RESULT=new OR(8,new NOT(9,c1),c2);:}
+	| FALSE IMPLICA TRUE {:RESULT=new COND(5,new CONST("1",new TIPO(TIPO.INT)),new CONST("1",new TIPO(TIPO.INT)));:}
+	;
+
+arr ::= ALL expr:e {:RESULT = new ArrayList<AST>(); RESULT.add(e);:}
+	|arr:a COMA expr:e {:RESULT = new ArrayList<AST>(); RESULT.addAll(a); RESULT.add(e);:}	
+	;
+	
+arr2 ::= arr:a CLL {:RESULT = new ArrayList<AST>(); RESULT.addAll(a);:};
+
+
+

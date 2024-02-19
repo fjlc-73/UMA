@@ -1,0 +1,66 @@
+import java_cup.runtime.*;
+import java.util.ArrayList;
+
+action code {:TablaSimbolos tb = new TablaSimbolos();:}
+
+/* Terminals (tokens returned by the scanner). */
+terminal ALL, CLL, AP, CP, AC, CC, COMA, PYC, ASIG, MAS, MENOS, POR, DIV, CONCATENA, INTERSECCION, INVERSA, ADJUNTA, TRANSPUESTA, SET, PRINT;
+terminal String IDENT;
+terminal double[] VECTOR, CONJUNTO;
+terminal double[][] MATRIZ;
+terminal Double NUMERO;
+
+/* Non terminals */
+non terminal linea, axioma;
+non terminal double[] exprvec;
+non terminal double[] exprcoj;
+non terminal ArrayList<Double> vector;
+non terminal Double numero;
+
+/* Precedences */
+precedence left MAS;
+precedence left CONCATENA;
+precedence left INTERSECCION;
+precedence left SET;
+precedence left AP,CP;
+
+/* The grammar */
+linea ::= linea axioma PYC
+	| axioma PYC
+	;
+		
+axioma ::= PRINT AP exprvec:e CP {:Matrices.print(e);:}
+	| PRINT AP exprcoj:e CP {:Matrices.print(e);:}
+	|IDENT:i ASIG exprvec:e {:tb.insertarVector(i,e);:}
+	|IDENT:i ASIG exprcoj:e {:tb.insertarConjunto(i,e);:}
+	;
+		
+exprcoj ::= SET exprvec:e {:RESULT=Matrices.toSet(e);:}
+	| SET exprcoj:e {:RESULT=e;:}
+	| CONJUNTO:c {:RESULT=c;:}
+	| exprcoj:e1 CONCATENA exprcoj:e2 {:RESULT=Matrices.union(e1,e2);:}
+	| exprcoj:e1 INTERSECCION exprcoj:e2 {:RESULT=Matrices.interseccion(e1,e2);:}
+	| exprvec:e1 INTERSECCION exprvec:e2 {:RESULT=Matrices.interseccion(Matrices.toSet(e1),Matrices.toSet(e2));:}
+	| exprvec:e1 INTERSECCION exprcoj:e2 {:RESULT=Matrices.interseccion(Matrices.toSet(e1),e2);:}
+	| exprcoj:e1 INTERSECCION exprvec:e2 {:RESULT=Matrices.interseccion(e1,Matrices.toSet(e2));:}
+	| AP exprcoj:e CP {:RESULT=e;:}
+	;
+
+exprvec ::= VECTOR:v {:RESULT=v;:}
+	| vector:v CLL {:RESULT=Matrices.toVector(v);:}
+	| exprvec:e1 CONCATENA exprvec:e2 {:RESULT=Matrices.concatena(e1,e2);:}
+	| exprvec:e1 CONCATENA numero:n {:RESULT=Matrices.concatena(e1,n);:}
+	| numero:n CONCATENA exprvec:e {:RESULT=Matrices.concatena(n,e);:}
+	| exprvec:e1 MAS exprvec:e2 {:RESULT=Matrices.suma(e1,e2);:}
+	| exprvec:e1 CONCATENA exprcoj:e2 {:RESULT=Matrices.concatena(e1,e2);:}
+	| exprcoj:e1 CONCATENA exprvec:e2 {:RESULT=Matrices.concatena(e1,e2);:}
+	| AP exprvec:e CP {:RESULT=e;:}
+	;
+
+vector ::= ALL numero:n {:RESULT = new ArrayList<Double>(); RESULT.add(n);:}
+	| vector:v COMA numero:n {:RESULT = new ArrayList<Double>(); RESULT.addAll(v); RESULT.add(n);:}
+	;
+	
+numero ::= NUMERO:n {:RESULT=n;:}
+	| MENOS NUMERO:n {:RESULT=-n;:}
+	;

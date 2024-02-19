@@ -1,0 +1,62 @@
+import java_cup.runtime.*;
+import java.util.HashMap;
+
+action code {:
+	public class TablaSimbolos {
+	
+	public final String ERROR_NOEXISTE = "ERROR6: No se ha encontrado este indentificador en la tabla de simbolos";
+	
+	private HashMap<String,String> tabla = new HashMap<String,String>();
+	
+	public String buscar(String ident) {
+		return tabla.get(ident);
+	}
+	
+	public void insertar(String ident, String matriz) {
+		tabla.put(ident, matriz);
+	}
+	
+		}
+
+	TablaSimbolos tb = new TablaSimbolos();
+
+:}
+
+terminal IGUAL, AP, CP ,PYC, PUNTO, COMA, PRINT, SUBSTR, SIZE, MAS, MENOS;
+terminal String CADENA, ID;
+terminal Integer NUMERO;
+
+non terminal empezar, axioma;
+non terminal String expr;
+non terminal Integer num;
+
+precedence left MAS, MENOS;
+precedence left AP, CP;
+precedence nonassoc PUNTO;
+
+empezar ::= empezar axioma
+	| axioma
+	;
+	
+axioma ::= ID:i IGUAL expr:e PYC {:tb.insertar(i,e);:}
+	| PRINT AP expr:e CP PYC {:System.out.println(e);:}
+	; 
+
+expr ::= CADENA:c {:RESULT=c;:}
+	| expr:e1 MAS expr:e2 {:RESULT=e1+e2;:}
+	|ID:i PUNTO SUBSTR AP num:n1 COMA num:n2 CP {:RESULT=tb.buscar(i).substring(n1,n1+n2);:}
+	|CADENA:c PUNTO SUBSTR AP num:n1 COMA num:n2 CP {:RESULT=c.substring(n1,n1+n2);:}
+	|AP expr:e CP PUNTO SUBSTR AP num:n1 COMA num:n2 CP {:RESULT=e.substring(n1,n1+n2);:}
+	|ID:i {:RESULT=tb.buscar(i);:}
+	|AP expr:e CP {:RESULT=e;:}
+	;
+	
+num ::= NUMERO:n {:RESULT=n;:}
+	|expr:e PUNTO SIZE AP CP {:RESULT=e.length();:}
+	|AP expr:e CP PUNTO SIZE AP CP {:RESULT=e.length();:}
+	|ID:i PUNTO SIZE AP CP {:RESULT=tb.buscar(i).length();:}
+	| num:n1 MENOS num:n2 {:RESULT=n1-n2;:}
+	| num:n1 MAS num:n2 {:RESULT=n1+n2;:}
+	;
+
+
